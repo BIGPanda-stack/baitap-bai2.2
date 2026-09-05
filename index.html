@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bài 2.2 SGK - Kéo Thả Đáp Án</title>
+  
+  <!-- KaTeX CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #d97706;
+      --bg-color: #fefce8;
+      --card-bg: #ffffff;
+      --border-color: #fde68a;
+    }
+
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg-color); margin: 0; padding: 12px; color: #1e293b; }
+
+    .header-title {
+      text-align: center;
+      color: #b45309;
+      font-size: 20px;
+      font-weight: 800;
+      margin: 10px 0 15px 0;
+      text-transform: uppercase;
+    }
+
+    .main-container {
+      max-width: 750px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.1);
+      border: 1px solid #fde68a;
+    }
+
+    .user-info {
+      background: #fffbeb;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid #fef3c7;
+    }
+
+    .user-info input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    /* Khai báo Ngân hàng thẻ đáp án */
+    .pool-container {
+      background: #fef3c7;
+      border: 2px dashed #f59e0b;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+
+    .pool-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+
+    .chips-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 48px;
+      align-items: center;
+    }
+
+    /* Thẻ đáp án */
+    .drag-chip {
+      background: #ffffff;
+      border: 2px solid #f59e0b;
+      color: #b45309;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: grab;
+      user-select: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+
+    .drag-chip:active { cursor: grabbing; }
+
+    .drag-chip.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+      color: #1d4ed8;
+      transform: scale(1.05);
+    }
+
+    .drag-chip.used {
+      opacity: 0.3;
+      pointer-events: none;
+      border-color: #cbd5e1;
+    }
+
+    /* Danh sách bài tập */
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .math-row {
+      background: #fff;
+      border: 2px solid #fcd34d;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    /* Ô thả / chứa đáp án */
+    .drop-zone {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 65px;
+      height: 40px;
+      padding: 2px 8px;
+      border: 2px dashed #dc2626;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #dc2626;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .drop-zone.active-zone {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .drop-zone.filled {
+      border-style: solid;
+      border-color: #f59e0b;
+      background: #fff;
+      color: #1e293b;
+    }
+
+    .drop-zone.correct {
+      border-color: #16a34a !important;
+      background: #dcfce7 !important;
+      color: #15803d !important;
+    }
+
+    .drop-zone.wrong {
+      border-color: #dc2626 !important;
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+    }
+
+    .btn-submit {
+      background: #d97706;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover { background: #b45309; }
+
+    /* Bảng Xếp Hạng */
+    table.board-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    table.board-table th, table.board-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
+    table.board-table th { background: #fef3c7; color: #92400e; }
+
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      .card { padding: 12px; }
+      .math-row { font-size: 15px; padding: 10px; gap: 4px; }
+      .drag-chip { padding: 4px 10px; font-size: 14px; }
+      .drop-zone { min-width: 55px; height: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header-title">🧩 BÀI 2.2 (SGK - TR33)</div>
+
+<div class="main-container">
+  <!-- THÔNG TIN NHÓM -->
+  <div class="card">
+    <div class="user-info">
+      <label for="studentName"><b>Tên Nhóm / HS:</b></label>
+      <input type="text" id="studentName" placeholder="Nhập tên của bạn...">
+    </div>
+  </div>
+
+  <!-- NỘI DUNG BÀI TẬP -->
+  <div class="card">
+    <div style="font-weight:bold; font-size:14px; margin-bottom:10px; color:#92400e;">
+      📌 <b>Hướng dẫn:</b> Chạm chọn 1 đáp án dưới đây rồi chạm vào ô <span style="color:#dc2626; border:1px dashed #dc2626; padding:1px 6px; border-radius:4px;">?</span> thích hợp:
+    </div>
+
+    <!-- NGÂN HÀNG THẺ ĐÁP ÁN (Bao gồm đáp án đúng & nhiễu) -->
+    <div class="pool-container">
+      <div class="pool-title">📦 NGUỒN ĐÁP ÁN (Bấm chọn hoặc Kéo):</div>
+      <div class="chips-flex" id="chipPool">
+        <!-- Đáp án đúng + Nhiễu -->
+        <div class="drag-chip" draggable="true" data-val="9y^2"><span class="math">9y^2</span></div>
+        <div class="drag-chip" draggable="true" data-val="3y"><span class="math">3y</span></div>
+        <div class="drag-chip" draggable="true" data-val="x^2"><span class="math">x^2</span></div>
+        <div class="drag-chip" draggable="true" data-val="x"><span class="math">x</span></div>
+        <div class="drag-chip" draggable="true" data-val="6y"><span class="math">6y</span></div> <!-- Nhiễu -->
+        <div class="drag-chip" draggable="true" data-val="2x"><span class="math">2x</span></div> <!-- Nhiễu -->
+        <div class="drag-chip" draggable="true" data-val="16y^2"><span class="math">16y^2</span></div> <!-- Nhiễu -->
+        <div class="drag-chip" draggable="true" data-val="9y"><span class="math">9y</span></div> <!-- Nhiễu -->
+      </div>
+    </div>
+
+    <!-- BÀI TẬP -->
+    <div class="exercise-list">
+      <!-- Câu a -->
+      <div class="math-row" data-id="a" data-ans="9y^2">
+        <span>a)</span>
+        <span class="math">(x - 3y)(x + 3y) = x^2 - </span>
+        <div class="drop-zone" onclick="handleZoneClick(this)">?</div>
+      </div>
+
+      <!-- Câu b -->
+      <div class="math-row" data-id="b" data-ans="x^2">
+        <span>b)</span>
+        <span class="math">(2x - y)(2x + y) = 4</span>
+        <div class="drop-zone" onclick="handleZoneClick(this)">?</div>
+        <span class="math">- y^2</span>
+      </div>
+
+      <!-- Câu c -->
+      <div class="math-row" data-id="c" data-ans="x">
+        <span>c)</span>
+        <span class="math">x^2 + 8xy + 16y^2 = (</span>
+        <div class="drop-zone" onclick="handleZoneClick(this)">?</div>
+        <span class="math">+ 4y)^2</span>
+      </div>
+
+      <!-- Câu d -->
+      <div class="math-row" data-id="d" data-ans="3y">
+        <span>d)</span>
+        <span class="math">4x^2 - 12xy + 9y^2 = (2x - </span>
+        <div class="drop-zone" onclick="handleZoneClick(this)">?</div>
+        <span class="math">)^2</span>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn" onclick="checkAnswer()">CHECK / KIỂM TRA BÀI LÀM</button>
+    <div id="resultBox" style="margin-top:12px; padding:10px; border-radius:8px; text-align:center; display:none; font-weight:bold;"></div>
+  </div>
+
+  <!-- BẢNG XẾP HẠNG -->
+  <div class="card">
+    <div style="font-weight:bold; font-size:15px; margin-bottom:10px; color:#1e293b;">🏆 BẢNG XẾP HẠNG</div>
+    <table class="board-table">
+      <thead>
+        <tr>
+          <th>Hạng</th>
+          <th>Tên</th>
+          <th>Điểm</th>
+          <th>Thời gian</th>
+        </tr>
+      </thead>
+      <tbody id="boardBody">
+        <tr><td colspan="4">Đang tải...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://hyllhascudmrpfelnukc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_oOicirSiyYu1f2oCYyYrzA_qcPCL7nX";
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let selectedChip = null;
+
+  window.onload = function() {
+    renderMath();
+    initEvents();
+    loadLeaderboard();
+  };
+
+  function renderMath() {
+    document.querySelectorAll('.math').forEach(el => {
+      katex.render(el.textContent, el, { throwOnError: false, displayMode: false });
+    });
+  }
+
+  function initEvents() {
+    // Sự kiện Tap/Click cho Thẻ đáp án
+    document.querySelectorAll('.drag-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        if (this.classList.contains('used')) return;
+
+        document.querySelectorAll('.drag-chip').forEach(c => c.classList.remove('selected'));
+        if (selectedChip === this) {
+          selectedChip = null;
+        } else {
+          this.classList.add('selected');
+          selectedChip = this;
+        }
+      });
+
+      // Hỗ trợ Kéo thả (Drag & Drop trên PC)
+      chip.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('text/plain', this.getAttribute('data-val'));
+        selectedChip = this;
+      });
+    });
+
+    // Sự kiện Thả trên PC
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (selectedChip) {
+          fillZone(this, selectedChip);
+        }
+      });
+    });
+  }
+
+  // Xử lý Click vào ô thả ?
+  function handleZoneClick(zone) {
+    // Nếu ô đã có giá trị -> Trả thẻ về pool
+    if (zone.classList.contains('filled')) {
+      let oldVal = zone.getAttribute('data-val');
+      let oldChip = document.querySelector(`.drag-chip[data-val="${oldVal}"]`);
+      if (oldChip) oldChip.classList.remove('used');
+
+      zone.innerHTML = '?';
+      zone.classList.remove('filled');
+      zone.removeAttribute('data-val');
+      return;
+    }
+
+    // Nếu đang chọn thẻ -> Điền vào ô
+    if (selectedChip) {
+      fillZone(zone, selectedChip);
+    }
+  }
+
+  function fillZone(zone, chip) {
+    // Nếu ô cũ đã có giá trị, nhả thẻ cũ ra trước
+    if (zone.classList.contains('filled')) {
+      let oldVal = zone.getAttribute('data-val');
+      let oldChip = document.querySelector(`.drag-chip[data-val="${oldVal}"]`);
+      if (oldChip) oldChip.classList.remove('used');
+    }
+
+    let val = chip.getAttribute('data-val');
+    zone.innerHTML = chip.innerHTML; // Copy nội dung KaTeX
+    zone.setAttribute('data-val', val);
+    zone.classList.add('filled');
+
+    chip.classList.add('used');
+    chip.classList.remove('selected');
+    selectedChip = null;
+  }
+
+  async function checkAnswer() {
+    let name = document.getElementById('studentName').value.trim();
+    if (!name) {
+      alert("Vui lòng nhập Tên trước khi nộp bài!");
+      return;
+    }
+
+    let rows = document.querySelectorAll('.math-row');
+    let correctCount = 0;
+    let totalQuestions = rows.length;
+
+    rows.forEach(row => {
+      let zone = row.querySelector('.drop-zone');
+      let targetAns = row.getAttribute('data-ans');
+      let userAns = zone.getAttribute('data-val');
+
+      if (userAns === targetAns) {
+        correctCount++;
+        zone.classList.remove('wrong');
+        zone.classList.add('correct');
+      } else {
+        zone.classList.remove('correct');
+        zone.classList.add('wrong');
+      }
+    });
+
+    let score = `${correctCount}/${totalQuestions}`;
+    let now = new Date();
+    let timeStr = now.getHours().toString().padStart(2,'0') + ":" + 
+                  now.getMinutes().toString().padStart(2,'0') + ":" + 
+                  now.getSeconds().toString().padStart(2,'0');
+
+    let resBox = document.getElementById('resultBox');
+    resBox.style.display = "block";
+    resBox.style.background = correctCount === totalQuestions ? "#dcfce7" : "#fee2e2";
+    resBox.style.color = correctCount === totalQuestions ? "#166534" : "#991b1b";
+    resBox.innerHTML = `🎉 <b>${name}</b> hoàn thành: <b>${correctCount}/${totalQuestions}</b> câu đúng!`;
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerText = "ĐANG LƯU KẾT QUẢ...";
+
+    await _supabase
+      .from('leaderboard')
+      .insert([{ name: name, score: score, time: timeStr, pts: correctCount }]);
+
+    document.getElementById('submitBtn').innerText = "ĐÃ NỘP BÀI!";
+    loadLeaderboard();
+  }
+
+  async function loadLeaderboard() {
+    let { data, error } = await _supabase
+      .from('leaderboard')
+      .select('*')
+      .order('pts', { ascending: false })
+      .order('id', { ascending: true });
+
+    let tbody = document.getElementById('boardBody');
+    tbody.innerHTML = '';
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4">Chưa có ai nộp bài.</td></tr>';
+      return;
+    }
+
+    data.forEach((row, index) => {
+      tbody.innerHTML += `<tr>
+        <td><b>${index + 1}</b></td>
+        <td><b>${row.name}</b></td>
+        <td><span style="color:#d97706; font-weight:bold;">${row.score}</span></td>
+        <td>${row.time}</td>
+      </tr>`;
+    });
+  }
+</script>
+
+</body>
+</html>
